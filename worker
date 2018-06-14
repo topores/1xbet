@@ -1,0 +1,154 @@
+import os
+
+def notify(title, text):
+    os.system("""
+              osascript -e 'display notification "{}" with title "{}"'
+              """.format(text, title))
+import requests, time
+re = open('res.txt', 'w')
+def getres():
+
+    #response = requests.get('https://1xstavka.ru/live/Football/') # get-запрос
+    response = requests.get('https://nl.1xbet.com/live/Football/')
+
+    #print(response.text) # вывод содержимогоf = open('text.txt', 'w') страницы
+
+    f = open('text.txt', 'w')
+
+
+    f.write(response.text)
+    game={}
+    result={}
+
+    lness={}
+    totalM={}
+    coef={}
+    #print('check')
+    r=open('text.txt', 'r')
+    s=['0']
+    pos0=-1
+    l=0
+    while (pos0==(-1)):
+        l+=1;
+        S=r.readline()
+        pos0=S.find('<input type="text" class="step-change-item',0,len(S))
+        s.append(S)
+
+    i=1
+    j=0
+    #print(l)
+    while (i<(l-20)):
+        i+=1;
+        pos=s[i].find(']&nbsp;</span>', 0,len(s[i]))
+        #print(pos)
+        if not (pos==-1):
+             res = s[i][pos + 14: pos + 17:1]
+
+             pos1=-1
+             if not (res=='   '):
+
+                 while (pos1==-1):
+                    i+=1;
+                    pos1 = s[i].find('data-gameid="', 0, len(s[i]))
+
+                    if not (pos1 == -1):
+
+
+                     #   print(i,' ',pos1)
+                     #   print(s[i][pos1 + 13: pos1 + 22:1])
+                        j+=1;
+
+                        game[j] = s[i][pos1 + 13: pos1 + 22:1]
+                        result[game[j]]=int(res[0])+int(res[2])
+                     #   print(j,game[j],'=',result[game[j]])
+                        pos2 = -1
+                        while (pos2 == -1):
+                            if (i<l):
+                                i += 1
+                            else:
+                                coef[game[j]] = 0
+                                totalM[game[j]] = 0
+                                break;
+                            #print(i)
+                            pos2 = s[i].find('data-betname="Тотал М (', 0, len(s[i]))
+
+                            if not (pos2 == -1):
+
+                                totalM[game[j]]=s[i][pos2 + 23: pos2 + 26:1]
+
+                                if (totalM[game[j]][1]==')'):
+                                    totalM[game[j]]=float(totalM[game[j]][0])
+                                else:
+                                    totalM[game[j]] = float(totalM[game[j]][0]+'.'+totalM[game[j]][2])
+
+                                #print(totalM[game[j]])
+                                pos3 = s[i - 2].find('data-coef="', 0, len(s[i-2]))
+                                coef[game[j]]=s[i - 2][pos3 + 11: len(s[i - 2]) - 2:1]
+                                #print(coef[game[j]])
+
+    return result,totalM,coef
+
+
+result0, totalM0, coef0 = getres()
+a=list(result0)
+print(a[0], type(a))
+resul = {}
+totaM = {}
+cof = {}
+lastresul = {}
+lasttotaM = {}
+lastcof = {}
+
+resul.update(result0)
+totaM.update(totalM0)
+cof.update(coef0)
+#'''
+import telebot
+
+token = '554253191:AAFDkj6jfMdq3LJ0HgkI2wk3CxmgP5OL7-M'
+
+bot = telebot.TeleBot(token)
+
+CHANNEL_NAME = '@moneygunforme'
+bot.send_message(CHANNEL_NAME, 'Bot Started!')
+#print(lastresul.copy)
+#'''
+while True:
+    try:
+        for i in range(0, len(a), 1):
+            lastresul[a[i]] = resul[a[i]]
+            lasttotaM[a[i]] = totaM[a[i]]
+            lastcof[a[i]] = cof[a[i]]
+        result0, totalM0, coef0 = getres()
+
+        time.sleep(5)
+        resul.update(result0)
+        totaM.update(totalM0)
+        cof.update(coef0)
+
+        #print(resul)
+        #for i in ran
+        #print(totaM)
+        #print(cof)
+        a = list(resul)
+        #print(a)
+        for i in range(0,len(a),1):
+            if not (resul.get(a[i])==lastresul.get(a[i])):
+                #print(resul.get(a[i]),lastresul.get(a[i]))
+                #print(a[i],totaM.get(a[i]), lasttotaM.get(a[i]))
+                #print(a[i], cof.get(a[i]), lastcof.get(a[i]))
+                print('not!')
+                print(str(a[i]) + ' ' + str(resul.get(a[i])) + ' ' + str(lastresul.get(a[i])) + ' ' + str(
+                    totaM.get(a[i])) + ' ' + str(cof.get(a[i])) + '\n')
+                print('not!')
+                if (((lasttotaM.get(a[i])!='None') or (lastcof.get(a[i])!='None') or (lastresul.get(a[i])!='None'))):
+                    if (float(totaM.get(a[i]))>float(resul.get(a[i]))) and (float(totaM.get(a[i]))<(float(resul.get(a[i]))+1)) and (float(cof.get(a[i]))>1.15) and (float(cof.get(a[i]))<2.1):
+                        re.write(str(a[i])+' '+str(resul.get(a[i]))+' '+str(lastresul.get(a[i]))+' '+str(totaM.get(a[i]))+' '+str(cof.get(a[i]))+'\n')
+                        print(str(a[i])+' '+str(resul.get(a[i]))+' '+str(lastresul.get(a[i]))+' '+str(totaM.get(a[i]))+' '+str(cof.get(a[i]))+'\n')
+                        bot.send_message(CHANNEL_NAME, 'Found! coef: '+str(cof.get(a[i])))
+                        bot.send_message(CHANNEL_NAME, str(a[i]))
+                        notify("Title", "Heres an alert")
+    except Exception:
+        print('EXCEPTION INTERSECTION')
+    else:
+        print('CORRECTION...')
